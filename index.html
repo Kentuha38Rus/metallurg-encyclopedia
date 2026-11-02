@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Металлург — Энциклопедия</title>
+
+<meta name="theme-color" content="#1e3c72">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Металлург">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%231e3c72'/%3E%3Cstop offset='1' stop-color='%232a5298'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='100' fill='url(%23g)'/%3E%3Ctext x='256' y='300' font-family='Arial' font-size='200' text-anchor='middle'%3E%E2%9A%92%EF%B8%8F%3C/text%3E%3C/svg%3E">
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    min-height: 100vh;
+    padding: calc(16px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom)) 16px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Шапка */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 10px;
+  }
+  .back-btn {
+    display: none;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: 0.2s;
+  }
+  .back-btn.show { display: block; }
+  .back-btn:active { background: rgba(255,255,255,0.3); transform: scale(0.95); }
+  
+  h1 { font-size: 20px; font-weight: 700; text-align: center; flex: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .header-icon { font-size: 24px; opacity: 0; width: 60px; } /* для баланса */
+
+  /* Сетка плиток */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+    margin-top: 10px;
+  }
+  @media (min-width: 700px) {
+    .grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  }
+
+  /* Карточки предметов/курсов */
+  .tile {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    min-height: 120px;
+    text-decoration: none;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  .tile:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+  .tile:active { transform: scale(0.97); background: rgba(255,255,255,0.2); }
+  
+  .tile-icon { font-size: 32px; margin-bottom: 12px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+  .tile-title { font-size: 14px; font-weight: 600; line-height: 1.3; }
+  .tile-subtitle { font-size: 11px; opacity: 0.7; margin-top: 4px; }
+
+  /* Список файлов */
+  .file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  /* Карточка файла */
+  .file-item {
+    background: rgba(255, 255, 255, 0.95);
+    color: #222;
+    border-radius: 16px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  .file-item:active { transform: scale(0.98); background: #f8f9fa; }
+  
+  .file-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .file-icon { 
+    font-size: 28px; 
+    flex-shrink: 0;
+    width: 40px;
+    text-align: center;
+  }
+  .file-info { display: flex; flex-direction: column; overflow: hidden; }
+  .file-name { 
+    font-size: 14px; 
+    font-weight: 600; 
+    line-height: 1.3; 
+    color: #1e3c72; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Бейджи формата */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 4px;
+    text-transform: uppercase;
+    width: fit-content;
+  }
+  .badge-pdf { background: #ffebee; color: #c62828; }
+  .badge-word { background: #e3f2fd; color: #1565c0; }
+  .badge-ppt { background: #fff3e0; color: #e65100; }
+  .badge-html { background: #e8f5e9; color: #2e7d32; }
+
+  /* Кнопка скачивания */
+  .download-btn {
+    background: #f1f3f4;
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+    flex-shrink: 0;
+    color: #1e3c72;
+    font-size: 20px;
+  }
+  .download-btn:hover { background: #e0e0e0; transform: scale(1.05); }
+  .download-btn:active { background: #d0d0d0; transform: scale(0.9); }
+
+  /* Специальная кнопка для приложения (HTML) */
+  .app-btn {
+    background: linear-gradient(135deg, #ffd93d 0%, #ffb300 100%);
+    color: #1e3c72;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 6px 20px rgba(255, 217, 61, 0.4);
+    transition: all 0.3s;
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  .app-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 217, 61, 0.5); }
+  .app-btn:active { transform: scale(0.98); }
+  .app-btn .file-icon { font-size: 32px; }
+
+  /* Анимация появления */
+  .fade-in { animation: fadeIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="back-btn" id="backBtn" onclick="goBack()">← Назад</button>
+  <h1 id="pageTitle">Выберите курс</h1>
+  <div class="header-icon" id="headerIcon"></div>
+</header>
+
+<div id="content" class="fade-in">
+  <!-- Сюда рендерится интерфейс -->
+</div>
+
+<script>
+/* =========================================
+   БАЗА ДАННЫХ (Обновленные пути к папкам)
+   ========================================= */
+const data = {
+  courses: {
+    "1": { title: "1 курс", icon: "1️⃣" },
+    "2": { title: "2 курс", icon: "2️⃣" },
+    "3": { title: "3 курс", icon: "3️⃣" },
+    "4": { title: "4 курс", icon: "4️⃣" }
+  },
+  subjects: {
+    "1": [
+      { id: "omp", title: "Основы металлургического производства", icon: "🏭", desc: "ОП.06" },
+      { id: "cm", title: "Металлургия цветных металлов", icon: "⚗️", desc: "МДК.01.01" },
+      { id: "equip", title: "Технологическое оборудование", icon: "⚙️", desc: "МДК.02.01" },
+      { id: "chem", title: "Физическая химия", icon: "🧪", desc: "ОП.02" },
+      { id: "heat", title: "Теплотехника", icon: "🔥", desc: "ОП.04" },
+      { id: "electro", title: "Электротехника", icon: "⚡", desc: "ОП.07" },
+      { id: "materials", title: "Материаловедение", icon: "🔩", desc: "ОП.01" },
+      { id: "mech", title: "Техническая механика", icon: "📐", desc: "ОП.05" },
+      { id: "graphics", title: "Инженерная графика", icon: "📏", desc: "ОП.09" },
+      { id: "lang", title: "Иностранный язык", icon: "🇬🇧", desc: "СТ.02" },
+      { id: "sport", title: "Физическая культура", icon: "🏃", desc: "СТ.04" }
+    ],
+    "2": [], "3": [], "4": []
+  },
+  files: {
+    // === ОМП ===
+    "omp": [
+      { name: "Интерактивные карточки и тест (56 вопросов)", file: "apps/omp.html", type: "html", icon: "🚀", isApp: true },
+      
+      { name: "Раздел 2. Огнеупорные материалы", file_pdf: "docs/omp/pdf/Раздел 2. Огнеупорные материалы.pdf", file_word: "docs/omp/word/Раздел 2. Огнеупорные материалы.docx", icon: "📄" },
+      { name: "Раздел 3. Агломерационное производство", file_pdf: "docs/omp/pdf/Раздел 3. Агломерационное производство.pdf", file_word: "docs/omp/word/Раздел 3. Агломерационное производство.docx", icon: "📄" },
+      { name: "Раздел 4.1 Производство чугуна", file_pdf: "docs/omp/pdf/Раздел 4.1 Производство чугуна. Введение..pdf", file_word: "docs/omp/word/Раздел 4.1 Производство чугуна. Введение..docx", icon: "📄" },
+      { name: "Раздел 4.2 Производство кокса", file_pdf: "docs/omp/pdf/Раздел 4.2. Производство кокса.pdf", file_word: "docs/omp/word/Раздел 4.2. Производство кокса.docx", icon: "📄" },
+      { name: "Раздел 4.3 Устройство доменной печи", file_pdf: "docs/omp/pdf/Раздел 4.3. Устройство и принцип работы доменной печи.pdf", file_word: "docs/omp/word/Раздел 4.3. Устройство и принцип работы доменной печи.docx", icon: "📄" },
+      { name: "Раздел 5.1 Основы сталеплавильного производства", file_pdf: "docs/omp/pdf/Раздел 5.1. Основы сталеплавильного производства.pdf", file_word: "docs/omp/word/Раздел 5.1. Основы сталеплавильного производства.docx", icon: "📄" },
+      { name: "Раздел 5.2 Сталь в конвертерах", file_pdf: "docs/omp/pdf/Раздел 5.2. Производство стали в кислородных конвертерах.pdf", file_word: "docs/omp/word/Раздел 5.2. Производство стали в кислородных конвертерах.docx", icon: "📄" },
+      { name: "Раздел 5.3 Сталь в электропечах", file_pdf: "docs/omp/pdf/Раздел 5.3. Производство стали в электропечах.pdf", file_word: "docs/omp/word/Раздел 5.3. Производство стали в электропечах.docx", icon: "📄" },
+      { name: "Раздел 5.4 Сталь в мартеновских печах", file_pdf: "docs/omp/pdf/Раздел 5.4. Производство стали в мартеновских печах.pdf", file_word: "docs/omp/word/Раздел 5.4. Производство стали в мартеновских печах.docx", icon: "📄" },
+      { name: "Раздел 5.5 Разливка стали", file_pdf: "docs/omp/pdf/Раздел 5.5. Разливка стали_ в изложницы_ на МНЛЗ.pdf", file_word: "docs/omp/word/Раздел 5.5. Разливка стали_ в изложницы_ на МНЛЗ.docx", icon: "📄" },
+      { name: "Двухстадийная схема", file_pdf: "docs/omp/pdf/Двухстадийная схема производства стали из руд.pdf", file_word: "docs/omp/word/Двухстадийная схема производства стали из руд.docx", icon: "📄" },
+      { name: "Диаграмма Fe-C", file_pdf: "docs/omp/pdf/К разделу 5.1. Диаграмма Fe C.pdf", file_word: "docs/omp/word/К разделу 5.1. Диаграмма Fe C.docx", icon: "📄" },
+      { name: "Контрольные вопросы (часть 1)", file_pdf: "docs/omp/pdf/Контрольные вопросы огнеупоры_ агломерация_ чугун.pdf", file_word: "docs/omp/word/Контрольные вопросы огнеупоры_ агломерация_ чугун.docx", icon: "📄" },
+      { name: "Контрольные вопросы (часть 2)", file_pdf: "docs/omp/pdf/Контрольные вопросы сталь часть 2.pdf", file_word: "docs/omp/word/Контрольные вопросы сталь часть 2.docx", icon: "📄" },
+      { name: "Контрольные вопросы (часть 3)", file_pdf: "docs/omp/pdf/Контрольные вопросы ОМП часть 3.pdf", file_word: "docs/omp/word/Контрольные вопросы ОМП часть 3.docx", icon: "📄" },
+      { name: "КР №3 (задания)", file_pdf: "docs/omp/pdf/1 Контрольная работа 3.pdf", file_word: "docs/omp/word/1 Контрольная работа 3.docx", icon: "📄" }
+    ],
+    
+    // === ЦМ ===
+    "cm": [
+      { name: "Интерактивные карточки и тест (49 вопросов)", file: "apps/cm.html", type: "html", icon: "🚀", isApp: true },
+      
+      { name: "1.1 Металлургия алюминия", file_pdf: "docs/cm/pdf/1.1 Металлургия алюминия. История и открытия (1).pdf", file_word: "docs/cm/word/1.1 Металлургия алюминия. История и открытия (1).docx", icon: "📄" },
+      { name: "1.2 Металлургия как отрасль", file_pdf: "docs/cm/pdf/1.2. Металлургия как отрасль производства.pdf", file_word: "docs/cm/word/1.2. Металлургия как отрасль производства.docx", icon: "📄" },
+      { name: "6.1 Производство меди", file_pdf: "docs/cm/pdf/6.1 Производство меди.pdf", file_word: "docs/cm/word/6.1 Производство меди.docx", icon: "📄" },
+      { name: "6.2 Благородные металлы", file_pdf: "docs/cm/pdf/6.2 Благородные металлы.pdf", file_word: "docs/cm/word/6.2 Благородные металлы.docx", icon: "📄" },
+      { name: "6.3 Производство никеля и кобальта", file_pdf: "docs/cm/pdf/6.3 Производство никеля и кобальта.pdf", file_word: "docs/cm/word/6.3 Производство никеля и кобальта.docx", icon: "📄" },
+      { name: "6.4 Производство свинца, цинка, кадмия", file_pdf: "docs/cm/pdf/6.4 Производство свинца_ цинка и кадмия.pdf", file_word: "docs/cm/word/6.4 Производство свинца_ цинка и кадмия.docx", icon: "📄" },
+      { name: "6.5 Производство тугоплавких металлов", file_pdf: "docs/cm/pdf/6.5 Производство тугоплавких металлов.pdf", file_word: "docs/cm/word/6.5 Производство тугоплавких металлов.docx", icon: "📄" },
+      
+      // Файл презентации: добавлен путь к PDF, так как вы его сконвертировали
+      { name: "Презентация: Современные проблемы", file_pdf: "docs/cm/pdf/Лекция 2  СОВРЕМЕННЫЕ ПРОБЛЕМЫ МЕТАЛЛУРГИИ Общее2.pdf", file_word: "docs/cm/word/Лекция 2  СОВРЕМЕННЫЕ ПРОБЛЕМЫ МЕТАЛЛУРГИИ Общее2.ppt", icon: "📊" },
+      
+      { name: "Лекции (учебник)", file_pdf: "docs/cm/pdf/Металлургия цветных металлов - лекции.pdf", icon: "📕" },
+      { name: "Контрольные вопросы (с ответами)", file_pdf: "docs/cm/pdf/Контрольные вопросы ЦМ с ответами.pdf", file_word: "docs/cm/word/Контрольные вопросы ЦМ с ответами.docx", icon: "📄" },
+      { name: "Контрольные вопросы (пустые)", file_pdf: "docs/cm/pdf/Контрольные вопросы ЦМ.pdf", file_word: "docs/cm/word/Контрольные вопросы ЦМ.docx", icon: "📄" }
+    ]
+  }
+};
+
+/* =========================================
+   ЛОГИКА НАВИГАЦИИ
+   ========================================= */
+let historyStack = [{ view: 'courses' }];
+
+const content = document.getElementById('content');
+const pageTitle = document.getElementById('pageTitle');
+const backBtn = document.getElementById('backBtn');
+const headerIcon = document.getElementById('headerIcon');
+
+function render() {
+  const current = historyStack[historyStack.length - 1];
+  content.innerHTML = '';
+  content.classList.remove('fade-in');
+  void content.offsetWidth; 
+  content.classList.add('fade-in');
+
+  if (historyStack.length > 1) {
+    backBtn.classList.add('show');
+    headerIcon.style.opacity = '1';
+  } else {
+    backBtn.classList.remove('show');
+    headerIcon.style.opacity = '0';
+  }
+
+  if (current.view === 'courses') {
+    pageTitle.textContent = "Выберите курс";
+    headerIcon.textContent = "🎓";
+    renderCourses();
+  } else if (current.view === 'subjects') {
+    const course = data.courses[current.courseId];
+    pageTitle.textContent = course.title;
+    headerIcon.textContent = course.icon;
+    renderSubjects(current.courseId);
+  } else if (current.view === 'files') {
+    const subject = data.subjects[current.courseId].find(s => s.id === current.subjectId);
+    pageTitle.textContent = subject.title;
+    headerIcon.textContent = subject.icon;
+    renderFiles(current.subjectId);
+  }
+}
+
+function renderCourses() {
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  
+  Object.keys(data.courses).forEach(id => {
+    const course = data.courses[id];
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.innerHTML = `
+      <div class="tile-icon">${course.icon}</div>
+      <div class="tile-title">${course.title}</div>
+      <div class="tile-subtitle">${data.subjects[id] ? data.subjects[id].length + ' предметов' : 'В планах'}</div>
+    `;
+    tile.onclick = () => {
+      if (data.subjects[id] && data.subjects[id].length > 0) {
+        historyStack.push({ view: 'subjects', courseId: id });
+        render();
+      } else {
+        alert('Материалы для этого курса появятся позже.');
+      }
+    };
+    grid.appendChild(tile);
+  });
+  content.appendChild(grid);
+}
+
+function renderSubjects(courseId) {
+  const subjects = data.subjects[courseId];
+  if (!subjects || subjects.length === 0) {
+    content.innerHTML = '<div class="empty-state">Материалы для этого курса еще не добавлены.</div>';
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  
+  subjects.forEach(subj => {
+    const hasFiles = data.files[subj.id] && data.files[subj.id].length > 0;
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    if (!hasFiles) tile.style.opacity = '0.5';
+    
+    tile.innerHTML = `
+      <div class="tile-icon">${subj.icon}</div>
+      <div class="tile-title">${subj.title}</div>
+      <div class="tile-subtitle">${subj.desc}</div>
+    `;
+    tile.onclick = () => {
+      if (hasFiles) {
+        historyStack.push({ view: 'files', courseId, subjectId: subj.id });
+        render();
+      } else {
+        alert('Файлы по этому предмету еще не загружены в базу.');
+      }
+    };
+    grid.appendChild(tile);
+  });
+  content.appendChild(grid);
+}
+
+function renderFiles(subjectId) {
+  const files = data.files[subjectId];
+  const list = document.createElement('div');
+  list.className = 'file-list';
+
+  files.forEach(f => {
+    const item = document.createElement('div');
+    
+    // === ЛОГИКА ДЛЯ HTML ПРИЛОЖЕНИЙ ===
+    if (f.isApp) {
+      item.className = 'app-btn';
+      item.innerHTML = `
+        <div class="file-icon">${f.icon}</div>
+        <div class="file-info">
+          <div class="file-name" style="color:#1e3c72;">${f.name}</div>
+          <div class="badge badge-html">Открыть</div>
+        </div>
+      `;
+      item.onclick = () => window.location.href = f.file;
+      list.appendChild(item);
+      return;
+    }
+
+    // === ЛОГИКА ДЛЯ ДОКУМЕНТОВ ===
+    item.className = 'file-item';
+    
+    // Умные бейджи
+    let badgesHtml = '';
+    if (f.file_pdf) badgesHtml += `<span class="badge badge-pdf">PDF (Читать)</span> `;
+    
+    if (f.file_word) {
+      if (f.file_word.endsWith('.ppt') || f.file_word.endsWith('.pptx')) {
+        badgesHtml += `<span class="badge badge-ppt">PPT (Скачать)</span>`;
+      } else {
+        badgesHtml += `<span class="badge badge-word">DOCX (Скачать)</span>`;
+      }
+    }
+
+    const pdfPath = f.file_pdf || '';
+    const wordPath = f.file_word || '';
+
+    item.innerHTML = `
+      <div class="file-left" onclick="handleFileClick('${pdfPath}', '${wordPath}')">
+        <div class="file-icon">${f.icon}</div>
+        <div class="file-info">
+          <div class="file-name">${f.name}</div>
+          <div>${badgesHtml}</div>
+        </div>
+      </div>
+      <button class="download-btn" title="Скачать файл" onclick="downloadFile(event, '${wordPath || pdfPath}')">
+        ⬇️
+      </button>
+    `;
+    list.appendChild(item);
+  });
+  content.appendChild(list);
+}
+
+// Умное открытие файла
+function handleFileClick(pdfUrl, wordUrl) {
+  if (pdfUrl) {
+    window.open(pdfUrl, '_blank');
+  } else if (wordUrl) {
+    window.open(wordUrl, '_blank');
+  } else {
+    alert('Файл не найден.');
+  }
+}
+
+// Принудительное скачивание
+function downloadFile(event, url) {
+  event.stopPropagation();
+  if (!url) {
+    alert('Файл не найден.');
+    return;
+  }
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = url.split('/').pop();
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  
+  const btn = event.currentTarget;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '⏳';
+  setTimeout(() => {
+    btn.innerHTML = '✅';
+    setTimeout(() => btn.innerHTML = originalText, 2000);
+  }, 500);
+}
+
+function goBack() {
+  if (historyStack.length > 1) {
+    historyStack.pop();
+    render();
+  }
+}
+
+render();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ЦМ — Подготовка к зачёту</title>
+
+<meta name="theme-color" content="#1e3c72">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ЦМ">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%231e3c72'/%3E%3Cstop offset='1' stop-color='%232a5298'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='100' fill='url(%23g)'/%3E%3Ctext x='256' y='280' font-family='Arial' font-size='160' font-weight='bold' fill='%23ffd93d' text-anchor='middle'%3EЦМ%3C/text%3E%3C/svg%3E">
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    min-height: 100vh;
+    padding: calc(16px + env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom)) 14px;
+    color: #222;
+  }
+  header { text-align: center; color: #fff; margin-bottom: 14px; }
+  header h1 { font-size: 21px; margin-bottom: 5px; }
+  header p { opacity: 0.85; font-size: 12px; }
+
+  .view-switcher {
+    margin: 0 auto 12px; display: flex; gap: 6px;
+    overflow-x: auto; background: rgba(255,255,255,0.12);
+    padding: 6px; border-radius: 12px; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; max-width: 1100px;
+  }
+  .view-switcher::-webkit-scrollbar { display: none; }
+  .view-btn {
+    padding: 10px 14px; border: 2px solid transparent; border-radius: 8px;
+    background: rgba(255,255,255,0.15); color: #fff;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .view-btn.active { background: #ffd93d; color: #1e3c72; border-color: #fff; }
+
+  .controls {
+    max-width: 1100px; margin: 0 auto 12px;
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+  }
+  .controls input, .controls button {
+    padding: 10px 14px; border: none; border-radius: 8px; font-size: 14px;
+  }
+  .controls input { flex: 1; min-width: 180px; background: #fff; }
+  .controls button { background: #ffd93d; color: #222; font-weight: 600; cursor: pointer; }
+
+  .stats { text-align: center; color: #fff; font-size: 12px; opacity: 0.85; margin-bottom: 12px; }
+  .content { max-width: 1100px; margin: 0 auto; }
+
+  .grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  @media (min-width: 700px) { .grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } }
+  .card { perspective: 1200px; height: 320px; cursor: pointer; }
+  .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
+  .card.flipped .card-inner { transform: rotateY(180deg); }
+  .card-front, .card-back {
+    position: absolute; width: 100%; height: 100%;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    border-radius: 14px; padding: 16px 18px;
+    display: flex; flex-direction: column;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25); overflow-y: auto;
+  }
+  .card-front { background: #fff; border-left: 5px solid #2a5298; }
+  .card-back { background: #fffbe6; border-left: 5px solid #ffd93d; transform: rotateY(180deg); }
+  .card-num { font-size: 10px; font-weight: 700; color: #2a5298; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .card-back .card-num { color: #b8860b; }
+  .card-front h3 { font-size: 15px; line-height: 1.35; color: #1e3c72; }
+  .card-back .answer { font-size: 12.5px; line-height: 1.5; color: #333; white-space: pre-wrap; }
+  .card-back .answer strong { color: #b8860b; }
+  .hint { margin-top: auto; font-size: 10px; color: #888; text-align: right; font-style: italic; }
+
+  .lecture { background: #fff; border-radius: 14px; padding: 20px 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
+  .lecture h2 { color: #1e3c72; font-size: 18px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 3px solid #ffd93d; }
+  .lecture-item { margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px dashed #ccc; }
+  .lecture-item:last-child { border-bottom: none; }
+  .lecture-q { font-size: 15px; font-weight: 700; color: #1e3c72; margin-bottom: 8px; line-height: 1.4; }
+  .lecture-q::before { content: attr(data-num) ". "; color: #b8860b; font-weight: 900; }
+  .lecture-a { font-size: 13.5px; line-height: 1.6; color: #333; white-space: pre-wrap; padding-left: 14px; border-left: 3px solid #ffd93d; }
+  .lecture-a strong { color: #b8860b; }
+
+  .cheatsheet { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
+  .cheatsheet h2 { color: #1e3c72; font-size: 18px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 3px solid #ffd93d; }
+  .cheat-item { margin-bottom: 8px; padding: 10px 12px; border-radius: 8px; background: #f8f9fb; border-left: 4px solid #2a5298; }
+  .cheat-q { font-weight: 700; color: #1e3c72; font-size: 13px; margin-bottom: 4px; }
+  .cheat-a { font-size: 12px; line-height: 1.5; color: #444; white-space: pre-wrap; }
+  .cheat-a strong { color: #b8860b; }
+
+  .mcquiz { background: #fff; border-radius: 14px; padding: 22px 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.25); min-height: 400px; display: flex; flex-direction: column; }
+  .mc-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 12px; color: #666; }
+  .mc-score { background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 12px; font-weight: 700; }
+  .mc-score.bad { background: #ffebee; color: #c62828; }
+  .mc-score.mid { background: #fff3e0; color: #ef6c00; }
+  .mc-progress-bar { height: 6px; background: #eee; border-radius: 3px; margin-bottom: 20px; overflow: hidden; }
+  .mc-progress-fill { height: 100%; background: linear-gradient(90deg, #2a5298, #ffd93d); transition: width 0.3s; }
+  .mc-question { font-size: 16.5px; font-weight: 700; color: #1e3c72; line-height: 1.4; margin-bottom: 16px; }
+  .mc-options { display: flex; flex-direction: column; gap: 9px; margin-bottom: 16px; }
+  .mc-option { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 10px; background: #f5f7fa; border: 2px solid transparent; cursor: pointer; transition: 0.15s; font-size: 14px; line-height: 1.4; color: #333; text-align: left; }
+  .mc-option:not(.disabled):active { transform: scale(0.99); background: #eef1f6; }
+  .mc-option .letter { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: #2a5298; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+  .mc-option.correct { background: #e8f5e9; border-color: #4caf50; color: #1b5e20; }
+  .mc-option.correct .letter { background: #4caf50; }
+  .mc-option.wrong { background: #ffebee; border-color: #e53935; color: #b71c1c; }
+  .mc-option.wrong .letter { background: #e53935; }
+  .mc-option.disabled { cursor: default; }
+  .mc-explanation { font-size: 13px; line-height: 1.55; color: #333; white-space: pre-wrap; padding: 12px 14px; background: #fffbe6; border-left: 4px solid #ffd93d; border-radius: 8px; margin-bottom: 14px; }
+  .mc-explanation strong { color: #b8860b; }
+  .mc-explanation .ok { color: #2e7d32; font-weight: 700; }
+  .mc-explanation .no { color: #c62828; font-weight: 700; }
+  .mc-actions { display: flex; gap: 8px; margin-top: auto; flex-wrap: wrap; }
+  .mc-actions button { padding: 12px 16px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; flex: 1; min-width: 100px; }
+  .btn-next { background: #2a5298; color: #fff; }
+  .btn-next:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-prev { background: #eee; color: #333; }
+  .btn-prev:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-restart { background: #ffd93d; color: #1e3c72; }
+  .mc-finished { text-align: center; padding: 30px 20px; }
+  .mc-finished h2 { color: #1e3c72; font-size: 22px; margin-bottom: 14px; }
+  .mc-final-score { font-size: 48px; font-weight: 900; background: linear-gradient(135deg, #2a5298, #ffd93d); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 8px; }
+  .mc-final-text { font-size: 15px; color: #555; margin-bottom: 20px; }
+  .mc-final-text.good { color: #2e7d32; font-weight: 700; }
+  .mc-final-text.bad { color: #c62828; font-weight: 700; }
+  .no-results { text-align: center; color: #fff; padding: 40px; font-size: 15px; opacity: 0.7; }
+
+  @media (max-width: 600px) {
+    .card { height: 340px; }
+    header h1 { font-size: 19px; }
+    .view-btn { padding: 9px 12px; font-size: 12px; }
+    .lecture, .mcquiz { padding: 16px; }
+    .mc-question { font-size: 15px; }
+    .mc-option { font-size: 13.5px; padding: 11px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚗️ Металлургия цветных металлов</h1>
+  <p>Карточек: <span id="totalCount">0</span> · Тестовых вопросов: <span id="mcTotal">0</span></p>
+</header>
+
+<div class="view-switcher">
+  <button class="view-btn active" data-view="cards">🃏 Карточки</button>
+  <button class="view-btn" data-view="lecture">📖 Лекция</button>
+  <button class="view-btn" data-view="cheatsheet">📋 Шпаргалка</button>
+  <button class="view-btn" data-view="quiz">🎯 Тест</button>
+</div>
+
+<div class="controls" id="controls">
+  <input type="text" id="search" placeholder="🔍 Поиск...">
+  <button onclick="flipAll(true)">Показать все</button>
+  <button onclick="flipAll(false)">Скрыть все</button>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="content" id="content"></div>
+
+<script>
+/* ============================================================
+   49 КАРТОЧЕК — СТРОГО ПО ВОПРОСАМ ИЗ КОНЦА ГЛАВ PDF-ЛЕКЦИИ
+   ============================================================ */
+const cards = [
+  // Алюминий (1-7)
+  { q: "Укажите физико-химические свойства алюминия.", a: "Алюминий – легкий металл (плотность 2,7 г/см3) серебристого цвета. Имеет высокую тепло- и электропроводность. Электропроводность чистого алюминия составляет 65,5 % от электропроводности меди. Химически активен, но покрывается прочной оксидной пленкой." },
+  { q: "Какое сырьё используется для производства алюминия?", a: "Главный вид рудного сырья – бокситы (содержат гидраргиллит, бемит или диаспор). Также используются нефелины, алуниты и глины (каолинит)." },
+  { q: "Какие способы применяются для производства глинозёма?", a: "Основные способы: способ Байера (для бокситов с низким содержанием кремнезема) и метод спекания (для высококремнистых бокситов и нефелинов)." },
+  { q: "В чём сущность метода Байера?", a: "Основан на обратимости реакции между гидратированной окисью алюминия и щелочью: при нагревании боксита с концентрированной щелочью окись алюминия переходит в раствор в виде алюмината натрия. Последующее разбавление и охлаждение растворов вызывает гидролиз с выделением в осадок гидроокиси алюминия." },
+  { q: "В чём сущность производства глинозёма методом спекания?", a: "Боксит или нефелин спекают с содой и известняком при 1200-1300 °C. Образующийся спек (алюминат натрия) выщелачивают. Из раствора выделяют гидроокись алюминия, а из нерастворимого шлама извлекают соду." },
+  { q: "Технологические особенности производства алюминия электролизом.", a: "Электролиз ведут в расплаве криолита Na3AlF6 с добавлением глинозема (Al2O3) при температуре 900-1000 °C. Катодом служит угольная подина, анодом — угольные блоки. Жидкий алюминий собирается на подине." },
+  { q: "Какие сплавы на основе алюминия получаются электродуговой плавкой?", a: "Силикоалюминий (сплав алюминия с кремнием) получают восстановлением кремнеземистых руд углем в дуговых электропечах при температуре около 2500 °C." },
+  
+  // Магний (8-12)
+  { q: "Укажите физико-химические свойства магния.", a: "Магний плавится при 651 °C, кипит при 1107 °C. Плотность 1,74 г/см3 (один из самых легких конструкционных металлов). Химически активен, при нагреве выше 623 °C на воздухе воспламеняется и горит." },
+  { q: "Какое сырьё используется для производства магния?", a: "Ископаемые соединения: карналлит KCl·MgCl2·6H2O, магнезит MgCO3 и доломит MgCO3·CaCO3. Также используют морскую воду." },
+  { q: "В чём сущность производства магния электролизом?", a: "Электролиз расплавленного хлорида магния MgCl2 (или смеси MgCl2 и KCl) в ванне с графитовым анодом и стальными катодами. Магний выделяется на катоде в жидком виде и всплывает на поверхность." },
+  { q: "В чём сущность термического способа производства магния?", a: "Углетермический способ: окись магния смешивают с коксом, брикетируют и нагревают в электропечи при 2500 °C. Магний получается в виде паров, которые быстро охлаждают и конденсируют." },
+  { q: "В чём сущность силикотермического способа производства магния?", a: "Окись магния (в составе каустического доломита) восстанавливают в вакууме ферросилицием (сплавом железа и кремния) при 1160-1170 °C. Пары магния конденсируются в кристаллический осадок." },
+  
+  // Бериллий (13-19)
+  { q: "Укажите физико-химические свойства бериллия.", a: "Металл серого цвета, плавится при 1287 °C. Плотность 0,848 г/см3 (очень легкий). Химически активен, но устойчив на воздухе благодаря оксидной пленке." },
+  { q: "Как классифицируются сплавы на основе бериллия?", a: "Большой интерес представляют сплавы бериллия с 20–40% алюминия (Be-Al). Они отличаются высокими механическими свойствами при плотности немногим больше бериллия." },
+  { q: "Какие существуют способы производства бериллия?", a: "Металлотермические методы (восстановление фторида бериллия магнием) и электролитическое производство (электролиз расплавов солей)." },
+  { q: "Какое сырьё применяется для производства бериллия?", a: "Минералы берилл Be3Al2[Si6O18], бертрандит Ве4[Si2O7](OH)2, фенакит Ве2[SiO4]. Содержание ВеО в рудах 0,02–0,6%." },
+  { q: "В чём сущность металлотермических методов производства бериллия?", a: "Восстановление фторида бериллия металлами (например, магнием). Реакция идет с выделением большого количества тепла, шлак (MgF2) отделяется, а бериллий всплывает на поверхность ванны." },
+  { q: "На чём основано магнийтермическое восстановление фторида бериллия?", a: "На реакции BeF2 + Mg = Be + MgF2. Процесс ведут в графитовых тиглях в индукционных печах при температуре около 900 °C с использованием флюсов." },
+  { q: "Как осуществляется электролитическое производство бериллия?", a: "Электролиз расплавов галогенидов бериллия (например, BeCl2 и NaCl) в специальных ваннах. Анод изготавливают из плотного графита, катодом служит сам тигель." },
+  
+  // Титан (20-25)
+  { q: "Укажите физико-химические свойства титана.", a: "Титан плавится при 1668 °C. Плотность 4,5 г/см3. Имеет две аллотропические модификации (α и β). Обладает высокой коррозионной стойкостью, низкой теплопроводностью." },
+  { q: "Какое сырьё применяется для получения титана?", a: "Основные минералы: рутил TiO2 и ильменит FeTiO3. Ильменитовые руды обогащают с получением титанового шлака (80–87% TiO2)." },
+  { q: "Каковы особенности производства тетрахлорида титана?", a: "Тетрахлорид титана TiCl4 получают хлорированием титанового шлака газообразным хлором в присутствии угля при 700–900 °C. Затем его очищают ректификацией от примесей." },
+  { q: "В чём сущность магниетермического способа производства титана?", a: "Восстановление тетрахлорида титана TiCl4 магнием в стальных герметичных аппаратах в атмосфере аргона при 850...900 °C. В результате получают губчатый титан и хлористый магний." },
+  { q: "В чём сущность натриетермического способа производства титана?", a: "Восстановление TiCl4 жидким натрием в атмосфере аргона при 801...883 °C. В результате получают титановый порошок и хлористый натрий, который отделяют выщелачиванием." },
+  { q: "В чём сущность кальциетермического способа производства титана?", a: "Восстановление диоксида титана TiO2 кальцием при 1000...1100 °C. В результате получают мелкодисперсный порошок титана и оксид кальция." },
+  
+  // Медь (26-30)
+  { q: "Укажите физико-химические свойства меди.", a: "Медь плавится при 1083 °C. Плотность 8,94 г/см3. Обладает высокой электро- и теплопроводностью (уступает только серебру). Химическая активность невелика." },
+  { q: "Укажите способы производства меди.", a: "Пирометаллургический способ (основной, около 85% меди) и гидрометаллургический способ (для бедных и окисленных руд)." },
+  { q: "Как проводится выплавка меди из сульфидных концентратов и руд?", a: "Сульфидные концентраты плавят на штейн (сплав сульфидов Cu2S и FeS). Штейн продувают в конвертере для получения черновой меди, которую затем рафинируют." },
+  { q: "Как проводят обогащение медных руд?", a: "Сульфидные руды обогащают флотацией, получая концентраты с содержанием до 55% Cu. Извлечение меди в концентраты составляет 80—95%." },
+  { q: "Что представляет собой флотация?", a: "Процесс обогащения, основанный на различной смачиваемости поверхности минералов. Медные минералы (сульфиды) не смачиваются водой и прилипают к пузырькам воздуха, всплывая в пену." },
+  
+  // Никель (31-37)
+  { q: "Укажите физико-химические свойства никеля.", a: "Никель плавится при 1455 °C. Плотность 8,897 г/см3. Ферромагнитный металл. Обладает высокой коррозионной стойкостью и жаростойкостью." },
+  { q: "Какое сырьё применяют для получения никеля?", a: "Окисленные никелевые руды (силикаты) и сульфидные медно-никелевые руды (пентландит, халькопирит)." },
+  { q: "Укажите способы получения никеля.", a: "Пирометаллургические (плавка на штейн) и гидрометаллургические (автоклавное выщелачивание) способы." },
+  { q: "В чём сущность производства никеля из сульфидных руд?", a: "Флотационное обогащение, плавка на штейн, конвертирование, получение файнштейна. Затем файнштейн разделяют на медный и никелевый концентраты и рафинируют." },
+  { q: "В чём сущность производства никеля из окисленных руд?", a: "Плавка на штейн с добавлением пирита или гипса (для сульфидирования никеля). Полученный штейн конвертируют и получают огневой никель." },
+  { q: "В чём сущность кричного способа переработки окисленных руд?", a: "Руду смешивают с углем и нагревают в трубчатых вращающихся печах при 1050 °C. Восстановленный никель получают в виде зерен (крицы) и отделяют магнитной сепарацией." },
+  { q: "В чём сущность гидрометаллургического способа производства никеля?", a: "Измельченную руду или концентрат обрабатывают раствором аммиака и (NH4)2SO4 в автоклавах под давлением. Медь, никель и кобальт переходят в раствор в виде комплексных аммиачных солей." },
+  
+  // Цинк (38-43)
+  { q: "Укажите физико-химические свойства цинка.", a: "Цинк плавится при 427 °C, кипит при 907 °C. Плотность 7,133 г/см3. Хрупкий при комнатной температуре. Применяется для антикоррозионных покрытий (цинкование)." },
+  { q: "Какое сырьё используют для производства цинка?", a: "Сульфидные полиметаллические руды (сфалерит ZnS), а также окисленные цинковые руды (смитсонит ZnCO3)." },
+  { q: "В чём заключается дистилляционный способ производства цинка?", a: "Обожженный концентрат смешивают с углем и нагревают в ретортах (или шахтных печах) до 1200-1300 °C. Цинк восстанавливается и уходит в виде паров, которые затем конденсируются." },
+  { q: "Укажите особенности гидрометаллургического производства цинка.", a: "Обожженный концентрат выщелачивают раствором серной кислоты. Раствор очищают от примесей и подвергают электролизу, при котором цинк осаждается на катоде." },
+  { q: "Как производится рафинирование чернового цинка?", a: "Ликвацией (отстаиванием при 430-450 °C для отделения свинца и железа) или ректификацией (разделение цинка и кадмия по температурам кипения)." },
+  { q: "Как производится дистилляция цинка в шахтных печах?", a: "В шахтную печь загружают агломерат и кокс. В нижней части печи цинк восстанавливается и в виде паров поднимается вверх, где окисляется (если нужен ZnO) или конденсируется в жидкий металл." },
+  
+  // Свинец (44-49)
+  { q: "Укажите физико-химические свойства свинца.", a: "Свинец плавится при 327 °C. Плотность 11,34 г/см3. Мягкий, пластичный, тяжелый металл. Хороший поглотитель радиации. Токсичен." },
+  { q: "Укажите свойства свинцовых сплавов.", a: "Свинцовые сплавы (с сурьмой, оловом, медью) обладают высокой твердостью, износостойкостью, используются для изготовления аккумуляторов, подшипников (баббиты) и припоев." },
+  { q: "Какое сырьё используют для производства свинца?", a: "Сульфидные руды (галенит PbS), а также окисленные руды (церуссит PbCO3). Основное сырьё — свинцовые концентраты, получаемые флотацией." },
+  { q: "Классификация способов производства свинца.", a: "Осадительная, реакционная и восстановительная плавка. В настоящее время основное значение имеет восстановительная шахтная плавка." },
+  { q: "Как проводится реакционная плавка свинца?", a: "Основана на взаимодействии сульфида свинца (PbS) с его оксидом (PbO) или сульфатом. Проводится в электротермических печах после частичного окислительного обжига концентрата." },
+  { q: "Как проводится горновая плавка свинца?", a: "Переработка очень богатых концентратов (75-78% Pb) в шахтных печах. Свинцовый блеск окисляется, а затем взаимодействует с сульфидом, выделяя металлический свинец." }
+];
+
+/* ============================================================
+   49 ТЕСТОВЫХ ВОПРОСОВ
+   ============================================================ */
+const mcQuestions = [
+  { q: "Какова плотность алюминия?", options: ["2,7 г/см3", "4,5 г/см3", "7,1 г/см3", "8,9 г/см3"], correct: 0, explanation: "Алюминий — легкий металл, его плотность 2,7 г/см3." },
+  { q: "Что является главным рудным сырьем для производства алюминия?", options: ["Нефелин", "Алунит", "Бокситы", "Каолинит"], correct: 2, explanation: "Главный вид рудного сырья — бокситы (содержат гидраргиллит, бемит или диаспор)." },
+  { q: "Какой способ производства глинозема используется для бокситов с низким содержанием кремнезема?", options: ["Метод спекания", "Способ Байера", "Электролиз", "Хлорирование"], correct: 1, explanation: "Способ Байера основан на обратимости реакции между гидратированной окисью алюминия и щелочью." },
+  { q: "Какова температура электролиза алюминия в криолите?", options: ["500-600 °C", "700-800 °C", "900-1000 °C", "1500-1600 °C"], correct: 2, explanation: "Электролиз ведут в расплаве криолита с добавлением глинозема при температуре 900-1000 °C." },
+  { q: "При какой температуре плавится магний?", options: ["327 °C", "651 °C", "1083 °C", "1455 °C"], correct: 1, explanation: "Магний плавится при 651 °C, кипит при 1107 °C." },
+  { q: "Какое сырье используют для производства магния?", options: ["Бокситы", "Карналлит, магнезит, доломит", "Ильменит", "Галенит"], correct: 1, explanation: "Ископаемые соединения: карналлит, магнезит и доломит. Также используют морскую воду." },
+  { q: "В чем сущность силикотермического способа производства магния?", options: ["Восстановление MgO кремнием при 1160-1170 °C", "Электролиз расплава MgCl2", "Восстановление MgO углем при 2500 °C", "Выщелачивание серной кислотой"], correct: 0, explanation: "Окись магния (в составе каустического доломита) восстанавливают в вакууме ферросилицием при 1160-1170 °C." },
+  { q: "Какова плотность бериллия?", options: ["0,848 г/см3", "1,74 г/см3", "2,7 г/см3", "4,5 г/см3"], correct: 0, explanation: "Бериллий — очень легкий металл, плотность 0,848 г/см3." },
+  { q: "Какое сырье применяется для производства бериллия?", options: ["Карналлит", "Боксит", "Берилл, бертрандит, фенакит", "Галенит"], correct: 2, explanation: "Минералы берилл, бертрандит, фенакит. Содержание ВеО в рудах 0,02–0,6%." },
+  { q: "На чем основано магнийтермическое восстановление фторида бериллия?", options: ["BeF2 + Mg = Be + MgF2", "BeO + C = Be + CO", "BeCl2 + Na = Be + NaCl", "BeO + H2 = Be + H2O"], correct: 0, explanation: "Процесс ведут в графитовых тиглях в индукционных печах при 900 °C с использованием флюсов." },
+  { q: "При какой температуре плавится титан?", options: ["1083 °C", "1287 °C", "1455 °C", "1668 °C"], correct: 3, explanation: "Титан плавится при 1668 °C. Плотность 4,5 г/см3." },
+  { q: "Какое сырье является основным для получения титана?", options: ["Бокситы", "Рутил и ильменит", "Карналлит", "Сфалерит"], correct: 1, explanation: "Основные минералы: рутил TiO2 и ильменит FeTiO3." },
+  { q: "В чем сущность магниетермического способа производства титана?", options: ["Восстановление TiCl4 магнием при 850-900 °C", "Восстановление TiO2 кальцием", "Восстановление TiCl4 натрием", "Электролиз расплава"], correct: 0, explanation: "Восстановление TiCl4 магнием в стальных герметичных аппаратах в атмосфере аргона при 850...900 °C." },
+  { q: "При какой температуре плавится медь?", options: ["327 °C", "660 °C", "1083 °C", "1455 °C"], correct: 2, explanation: "Медь плавится при 1083 °C. Плотность 8,94 г/см3." },
+  { q: "Какой способ производства меди является основным?", options: ["Гидрометаллургический", "Пирометаллургический", "Электролитический", "Химический"], correct: 1, explanation: "Пирометаллургический способ (основной, около 85% меди)." },
+  { q: "Как проводят обогащение сульфидных медных руд?", options: ["Магнитной сепарацией", "Флотацией", "Гравитацией", "Электролизом"], correct: 1, explanation: "Сульфидные руды обогащают флотацией, получая концентраты с содержанием до 55% Cu." },
+  { q: "При какой температуре плавится никель?", options: ["1083 °C", "1287 °C", "1455 °C", "1668 °C"], correct: 2, explanation: "Никель плавится при 1455 °C. Плотность 8,897 г/см3." },
+  { q: "В чем сущность гидрометаллургического способа производства никеля?", options: ["Плавка на штейн", "Автоклавное выщелачивание аммиаком", "Конвертирование", "Флотация"], correct: 1, explanation: "Измельченную руду обрабатывают раствором аммиака и (NH4)2SO4 в автоклавах под давлением." },
+  { q: "При какой температуре плавится цинк?", options: ["327 °C", "427 °C", "651 °C", "1083 °C"], correct: 1, explanation: "Цинк плавится при 427 °C, кипит при 907 °C. Плотность 7,133 г/см3." },
+  { q: "В чем заключается дистилляционный способ производства цинка?", options: ["Электролиз раствора", "Восстановление углем при 1200-1300 °C", "Выщелачивание кислотой", "Обжиг"], correct: 1, explanation: "Обожженный концентрат смешивают с углем и нагревают в ретортах до 1200-1300 °C. Цинк уходит в виде паров." },
+  { q: "При какой температуре плавится свинец?", options: ["327 °C", "427 °C", "651 °C", "1083 °C"], correct: 0, explanation: "Свинец плавится при 327 °C. Плотность 11,34 г/см3." },
+  { q: "Какая плавка свинца имеет основное значение в настоящее время?", options: ["Осадительная", "Реакционная", "Восстановительная шахтная", "Горновая"], correct: 2, explanation: "В настоящее время основное значение имеет восстановительная шахтная плавка." },
+  { q: "Для чего используют свинцовые сплавы?", options: ["Для аккумуляторов и подшипников", "Для производства стекла", "Для электропроводки", "Для ювелирных изделий"], correct: 0, explanation: "Используются для изготовления аккумуляторов, подшипников (баббиты) и припоев." }
+];
+
+/* ============ ЛОГИКА (Скопирована из omp.html) ============ */
+const validCards = cards.filter(c => c.q && c.a && c.a.trim() !== "");
+let currentView = 'cards';
+let filteredCards = [...validCards];
+let searchFilter = '';
+
+let mcOrder = [...mcQuestions.keys()];
+let mcIndex = 0;
+let mcAnswers = [];
+let mcFinished = false;
+
+const content = document.getElementById('content');
+const stats = document.getElementById('stats');
+const searchInput = document.getElementById('search');
+document.getElementById('totalCount').textContent = validCards.length;
+document.getElementById('mcTotal').textContent = mcQuestions.length;
+
+document.querySelectorAll('.view-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentView = btn.dataset.view;
+    render();
+  });
+});
+
+searchInput.addEventListener('input', () => {
+  searchFilter = searchInput.value.trim().toLowerCase();
+  if (currentView !== 'quiz') {
+    filteredCards = searchFilter
+      ? validCards.filter(c => (c.q + " " + c.a).toLowerCase().includes(searchFilter))
+      : [...validCards];
+  }
+  render();
+});
+
+function flipAll(show) {
+  document.querySelectorAll('.card').forEach(c => {
+    if (show) c.classList.add('flipped');
+    else c.classList.remove('flipped');
+  });
+}
+
+function render() {
+  if (currentView === 'cards') renderCards();
+  else if (currentView === 'lecture') renderLecture();
+  else if (currentView === 'cheatsheet') renderCheatsheet();
+  else if (currentView === 'quiz') renderQuiz();
+
+  const searchWrap = document.querySelector('.controls');
+  if (currentView === 'quiz') {
+    searchWrap.style.display = 'none';
+    stats.textContent = '';
+  } else {
+    searchWrap.style.display = 'flex';
+    const count = currentView === 'cards' ? filteredCards.length : validCards.length;
+    stats.textContent = searchFilter
+      ? `Найдено: ${count} из ${validCards.length}`
+      : `Всего: ${validCards.length}`;
+    document.querySelectorAll('#controls button').forEach(b => {
+      b.style.display = currentView === 'cards' ? '' : 'none';
+    });
+  }
+}
+
+function renderCards() {
+  if (filteredCards.length === 0) {
+    content.innerHTML = '<div class="no-results">😕 Ничего не найдено.</div>';
+    return;
+  }
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  filteredCards.forEach((card, i) => {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.innerHTML = `
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="card-num">Вопрос ${i + 1}</div>
+          <h3>${card.q}</h3>
+          <div class="hint">нажмите → ответ</div>
+        </div>
+        <div class="card-back">
+          <div class="card-num">Ответ</div>
+          <div class="answer">${card.a}</div>
+          <div class="hint">← назад</div>
+        </div>
+      </div>`;
+    el.addEventListener('click', () => el.classList.toggle('flipped'));
+    grid.appendChild(el);
+  });
+  content.innerHTML = '';
+  content.appendChild(grid);
+}
+
+function renderLecture() {
+  let html = '<div class="lecture"><h2>📖 Конспект по ЦМ (49 вопросов)</h2>';
+  validCards.forEach((card, i) => {
+    html += `<div class="lecture-item">
+      <div class="lecture-q" data-num="${i + 1}">${card.q}</div>
+      <div class="lecture-a">${card.a}</div>
+    </div>`;
+  });
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+function renderCheatsheet() {
+  let html = '<div class="cheatsheet"><h2>📋 Краткая шпаргалка (49 вопросов)</h2>';
+  validCards.forEach((card, i) => {
+    html += `<div class="cheat-item">
+      <div class="cheat-q">${i + 1}. ${card.q}</div>
+      <div class="cheat-a">${card.a}</div>
+    </div>`;
+  });
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+function renderQuiz() {
+  if (mcFinished) { renderMcFinished(); return; }
+  const total = mcOrder.length;
+  const qIndex = mcOrder[mcIndex];
+  const question = mcQuestions[qIndex];
+  const userAnswer = mcAnswers[qIndex];
+  const answered = userAnswer !== undefined && userAnswer !== -1;
+
+  const correctCount = mcAnswers.reduce((acc, a, i) => acc + (a === mcQuestions[i].correct ? 1 : 0), 0);
+  const answeredCount = mcAnswers.filter(a => a !== undefined && a !== -1).length;
+
+  let scoreClass = 'mc-score';
+  if (answeredCount > 0) {
+    const pct = correctCount / answeredCount;
+    if (pct >= 0.7) scoreClass += '';
+    else if (pct >= 0.4) scoreClass += ' mid';
+    else scoreClass += ' bad';
+  }
+
+  const letters = ['А', 'Б', 'В', 'Г', 'Д'];
+  let optionsHtml = '';
+  question.options.forEach((opt, i) => {
+    let cls = 'mc-option';
+    if (answered) {
+      cls += ' disabled';
+      if (i === question.correct) cls += ' correct';
+      else if (i === userAnswer) cls += ' wrong';
+    }
+    optionsHtml += `<div class="${cls}" onclick="mcSelect(${i})">
+      <div class="letter">${letters[i]}</div>
+      <div>${opt}</div>
+    </div>`;
+  });
+
+  let explanationHtml = '';
+  if (answered) {
+    const isCorrect = userAnswer === question.correct;
+    explanationHtml = `<div class="mc-explanation">
+      <span class="${isCorrect ? 'ok' : 'no'}">${isCorrect ? '✅ Верно!' : '❌ Неверно.'}</span>
+      ${!isCorrect ? ` Правильный ответ: <strong>${question.options[question.correct]}</strong>.` : ''}
+      <br><br>${question.explanation}
+    </div>`;
+  }
+
+  const html = `
+    <div class="mcquiz">
+      <div class="mc-header">
+        <span>Вопрос ${mcIndex + 1} из ${total}</span>
+        <span class="${scoreClass}">✓ ${correctCount} / ${answeredCount}</span>
+      </div>
+      <div class="mc-progress-bar">
+        <div class="mc-progress-fill" style="width: ${((mcIndex + 1) / total) * 100}%"></div>
+      </div>
+      <div class="mc-question">${question.q}</div>
+      <div class="mc-options">${optionsHtml}</div>
+      ${explanationHtml}
+      <div class="mc-actions">
+        <button class="btn-prev" onclick="mcPrev()" ${mcIndex === 0 ? 'disabled' : ''}>← Назад</button>
+        ${answered
+          ? (mcIndex === total - 1
+              ? `<button class="btn-restart" onclick="mcFinish()">🏁 Завершить тест</button>`
+              : `<button class="btn-next" onclick="mcNext()">Далее →</button>`)
+          : `<button class="btn-next" disabled>Далее →</button>`}
+      </div>
+    </div>`;
+  content.innerHTML = html;
+}
+
+function mcSelect(optionIdx) {
+  const qIndex = mcOrder[mcIndex];
+  if (mcAnswers[qIndex] !== undefined && mcAnswers[qIndex] !== -1) return;
+  mcAnswers[qIndex] = optionIdx;
+  renderQuiz();
+}
+function mcNext() { if (mcIndex < mcOrder.length - 1) { mcIndex++; renderQuiz(); } }
+function mcPrev() { if (mcIndex > 0) { mcIndex--; renderQuiz(); } }
+function mcFinish() { mcFinished = true; renderMcFinished(); }
+
+function renderMcFinished() {
+  const total = mcQuestions.length;
+  const correct = mcAnswers.reduce((acc, a, i) => acc + (a === mcQuestions[i].correct ? 1 : 0), 0);
+  const pct = Math.round((correct / total) * 100);
+  let text, cls;
+  if (pct >= 90) { text = '🏆 Отлично! Ты готов к зачёту!'; cls = 'good'; }
+  else if (pct >= 75) { text = '👍 Хорошо! Немного повтори — и всё получится.'; cls = 'good'; }
+  else if (pct >= 50) { text = '📚 Нормально, но стоит повторить сложные темы.'; cls = ''; }
+  else { text = '⚠️ Нужно серьёзно подготовиться. Прочитай лекцию и шпаргалку.'; cls = 'bad'; }
+
+  content.innerHTML = `
+    <div class="mcquiz">
+      <div class="mc-finished">
+        <h2>🏁 Тест завершён</h2>
+        <div class="mc-final-score">${correct} / ${total}</div>
+        <div class="mc-final-text ${cls}">${text} (${pct}%)</div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px;">
+          <button class="btn-restart" onclick="mcRestart(false)">🔄 Пройти снова</button>
+          <button class="btn-restart" onclick="mcRestart(true)" style="background:#2a5298;color:#fff;">🔀 Случайный порядок</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function mcRestart(shuffle) {
+  mcIndex = 0;
+  mcAnswers = [];
+  mcFinished = false;
+  if (shuffle) {
+    for (let i = mcOrder.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [mcOrder[i], mcOrder[j]] = [mcOrder[j], mcOrder[i]];
+    }
+  } else {
+    mcOrder = [...mcQuestions.keys()];
+  }
+  renderQuiz();
+}
+
+document.addEventListener('keydown', e => {
+  if (currentView !== 'quiz') return;
+  if (e.key === 'ArrowRight') mcNext();
+  else if (e.key === 'ArrowLeft') mcPrev();
+  else if (['1','2','3','4','5'].includes(e.key)) mcSelect(parseInt(e.key) - 1);
+});
+
+render();
+</script>
+
+</body>
+</html>
