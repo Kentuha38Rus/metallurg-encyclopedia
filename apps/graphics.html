@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Модель детали</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #1e3c72; }
+        #info {
+            position: absolute; top: 10px; width: 100%; text-align: center;
+            color: white; font-family: sans-serif; pointer-events: none;
+            z-index: 10;
+        }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <div id="info">🖱️ ЛКМ — вращение · Колесо — масштаб · ПКМ — перемещение</div>
+    
+    <!-- Подключаем Three.js и загрузчик моделей -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        // 1. Создаем сцену, камеру и рендерер
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1e3c72);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        // 2. Добавляем свет, чтобы модель была видна
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+        directionalLight.position.set(5, 10, 7);
+        scene.add(directionalLight);
+
+        // 3. Настраиваем управление (вращение, зум)
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true; // Модель будет сама медленно вращаться
+        controls.autoRotateSpeed = 2.0;
+
+        // 4. Загружаем модель
+        // ВАЖНО: замените 'model.glb' на имя вашего файла, который вы положите в папку
+        const loader = new GLTFLoader();
+        loader.load(
+            'model.glb', // <-- Имя файла вашей модели
+            function (gltf) {
+                const model = gltf.scene;
+                
+                // Автоматически центрируем и масштабируем модель
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const scale = 5 / maxDim; // Подгоняем под размер сцены
+                model.scale.set(scale, scale, scale);
+                model.position.sub(center.multiplyScalar(scale));
+
+                scene.add(model);
+                
+                // Наводим камеру на модель
+                camera.position.set(3, 3, 5);
+                controls.target.set(0, 0, 0);
+                controls.update();
+            },
+            undefined, // Функция прогресса (необязательно)
+            function (error) {
+                console.error('Ошибка загрузки модели:', error);
+                alert('Не удалось загрузить 3D модель. Проверьте путь к файлу.');
+            }
+        );
+
+        // 5. Обработка изменения размера окна
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // 6. Запуск анимации (цикл рендеринга)
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); // Нужно для авто-вращения и затухания
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
