@@ -5,53 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Модель детали</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #1e3c72; font-family: -apple-system, sans-serif; }
-        
+        body { margin: 0; overflow: hidden; background-color: #1e3c72; }
         #info {
-            position: absolute; top: 15px; width: 100%; text-align: center;
-            color: rgba(255, 255, 255, 0.7); font-size: 12px; pointer-events: none;
+            position: absolute; top: 10px; width: 100%; text-align: center;
+            color: white; font-family: sans-serif; pointer-events: none;
             z-index: 10;
         }
-
-        /* Панель управления видами */
-        #view-controls {
-            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
-            z-index: 10; width: 90%; max-width: 600px;
-            background: rgba(255,255,255,0.1); padding: 8px; border-radius: 12px;
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        #view-controls button {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: #fff; padding: 8px 14px; border-radius: 8px;
-            cursor: pointer; font-size: 13px; font-weight: 600;
-            transition: 0.2s;
-            flex: 1; min-width: 80px;
-        }
-
-        #view-controls button:hover { background: rgba(255, 255, 255, 0.3); }
-        #view-controls button:active { transform: scale(0.95); background: #ffd93d; color: #1e3c72; }
-        
         canvas { display: block; }
     </style>
 </head>
 <body>
     <div id="info">🖱️ ЛКМ — вращение · Колесо — масштаб · ПКМ — перемещение</div>
     
-    <!-- Кнопки видов -->
-    <div id="view-controls">
-        <button onclick="setView('iso')">Изометрия</button>
-        <button onclick="setView('top')">Сверху</button>
-        <button onclick="setView('bottom')">Снизу</button>
-        <button onclick="setView('front')">Спереди</button>
-        <button onclick="setView('back')">Сзади</button>
-        <button onclick="setView('left')">Слева</button>
-        <button onclick="setView('right')">Справа</button>
-    </div>
-
     <script type="importmap">
         {
             "imports": {
@@ -86,27 +51,8 @@
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         
-        // ОТКЛЮЧАЕМ АВТО-ВРАЩЕНИЕ
+        // Отключаем авто-вращение
         controls.autoRotate = false; 
-
-        // Дистанция камеры (насколько далеко она стоит от центра)
-        const camDist = 6;
-
-        // Функция для переключения видов (делаем глобальной, чтобы кнопки ее видели)
-        window.setView = function(view) {
-            switch(view) {
-                case 'top':    camera.position.set(0, camDist, 0.01); break; // 0.01 чтобы избежать "залипания" камеры
-                case 'bottom': camera.position.set(0, -camDist, 0.01); break;
-                case 'front':  camera.position.set(0, 0, camDist); break;
-                case 'back':   camera.position.set(0, 0, -camDist); break;
-                case 'left':   camera.position.set(-camDist, 0, 0); break;
-                case 'right':  camera.position.set(camDist, 0, 0); break;
-                case 'iso':    camera.position.set(3.5, 3.5, 5); break; // Стандартный 3D вид
-            }
-            // Камера всегда смотрит в центр (0,0,0)
-            controls.target.set(0, 0, 0);
-            controls.update();
-        };
 
         const loader = new GLTFLoader();
         loader.load(
@@ -125,8 +71,10 @@
 
                 scene.add(model);
                 
-                // Стартовая позиция камеры
-                setView('iso');
+                // Наводим камеру на модель
+                camera.position.set(3, 3, 5);
+                controls.target.set(0, 0, 0);
+                controls.update();
             },
             undefined,
             function (error) {
