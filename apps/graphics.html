@@ -10,7 +10,8 @@
         html, body { 
             width: 100%; 
             height: 100%; 
-            background-color: #0f172a; 
+            /* Светлый градиент для фона */
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); 
             font-family: -apple-system, sans-serif;
             overflow: hidden; 
         }
@@ -32,8 +33,9 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            background: rgba(0, 0, 0, 0.4); 
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            /* Светлая панель для чертежа */
+            background: #f8fafc; 
+            border-left: 2px solid #e2e8f0;
             overflow: hidden; 
         }
 
@@ -42,14 +44,18 @@
             max-height: 100%;
             object-fit: contain; 
             border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
-            border: 4px solid rgba(255, 255, 255, 0.8); 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            border: 4px solid #ffffff; 
             background: #fff;
         }
 
         #info {
-            position: absolute; top: 10px; width: 100%; text-align: center;
-            color: rgba(255, 255, 255, 0.5); font-size: 11px; pointer-events: none;
+            position: absolute; top: 15px; width: 100%; text-align: center;
+            /* Темный текст для светлого фона */
+            color: #64748b; 
+            font-size: 12px; 
+            font-weight: 600;
+            pointer-events: none;
             z-index: 10;
         }
 
@@ -61,10 +67,14 @@
             .image-panel { 
                 flex: 1; 
                 border-left: none; 
-                border-top: 1px solid rgba(255, 255, 255, 0.1); 
+                border-top: 2px solid #e2e8f0; 
                 padding: 10px; 
             }
-            .image-panel img { border: 2px solid rgba(255, 255, 255, 0.8); border-radius: 6px; }
+            .image-panel img { 
+                border: 2px solid #ffffff; 
+                border-radius: 6px; 
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
         }
     </style>
 </head>
@@ -93,7 +103,6 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        // Импортируем встроенную студию (не требует загрузки файлов из интернета)
         import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
         const viewerContainer = document.getElementById('viewer-panel');
@@ -101,7 +110,7 @@
         const height = viewerContainer.clientHeight;
 
         const scene = new THREE.Scene();
-        scene.background = null; 
+        scene.background = null; // Прозрачный фон, чтобы был виден CSS-градиент
 
         const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
         
@@ -110,23 +119,20 @@
         renderer.setPixelRatio(window.devicePixelRatio);
         
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        // Снижаем экспозицию, чтобы убрать белые пересветы
-        renderer.toneMappingExposure = 0.9; 
+        renderer.toneMappingExposure = 1.0; 
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
         viewerContainer.appendChild(renderer.domElement);
 
-        // --- ВСТРОЕННАЯ СТУДИЯ СВЕТА (Работает даже без интернета) ---
+        // Встроенная студия света
         const pmremGenerator = new THREE.PMREMGenerator(renderer);
         pmremGenerator.compileEquirectangularShader();
         const environment = new RoomEnvironment();
         scene.environment = pmremGenerator.fromScene(environment).texture;
 
-        // Добавляем немного направленного света для теней
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); 
         scene.add(ambientLight);
         
-        // Делаем свет чуть теплым (0xfff5e6), чтобы подчеркнуть золото
         const directionalLight = new THREE.DirectionalLight(0xfff5e6, 2.5);
         directionalLight.position.set(5, 10, 5);
         directionalLight.castShadow = true;
@@ -160,11 +166,10 @@
                         child.receiveShadow = true;
                         
                         if (child.material) {
-                            // ВОЗВРАЩАЕМ ЗОЛОТИСТЫЙ ОТТЕНОК (цвет латуни)
+                            // Оставляем тот цвет, который вам понравился (золотистый)
                             if (child.material.color) {
                                 child.material.color.setHex(0xd4af37); 
                             }
-                            // Убавляем яркость отражений, чтобы не было белых пятен
                             child.material.envMapIntensity = 1.2; 
                         }
                     }
