@@ -24,7 +24,8 @@
         .viewer-panel {
             flex: 1.5; 
             position: relative;
-            background: radial-gradient(circle at center, #2a5298 0%, #1e3c72 100%); /* Красивый градиент на фоне */
+            /* Делаем фон темнее, чтобы HDRI-отражения выглядели контрастнее */
+            background: #0f172a; 
         }
 
         .image-panel {
@@ -50,7 +51,7 @@
 
         #info {
             position: absolute; top: 10px; width: 100%; text-align: center;
-            color: rgba(255, 255, 255, 0.7); font-size: 11px; pointer-events: none;
+            color: rgba(255, 255, 255, 0.5); font-size: 11px; pointer-events: none;
             z-index: 10;
         }
 
@@ -94,8 +95,8 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        // Импортируем генератор окружения для реалистичных отражений металла
-        import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+        // Загрузчик HDRI карт
+        import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
         const viewerContainer = document.getElementById('viewer-panel');
         const width = viewerContainer.clientWidth;
@@ -109,28 +110,53 @@
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(width, height);
         renderer.setPixelRatio(window.devicePixelRatio);
-        // Добавляем тональную компрессию для реалистичного блеска
+        
+        // Включаем фотореалистичный рендеринг и тени
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.0;
+        renderer.toneMappingExposure = 1.2; 
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Мягкие тени
         viewerContainer.appendChild(renderer.domElement);
 
-        // --- НАСТРОЙКА ОКРУЖЕНИЯ ДЛЯ ОТРАЖЕНИЙ ---
+        // --- ЗАГРУЗКА HDRI ОКРУЖЕНИЯ ---
+        // Загружаем реалистичную карту студии (отражения)
         const pmremGenerator = new THREE.PMREMGenerator(renderer);
         pmremGenerator.compileEquirectangularShader();
-        const environment = new RoomEnvironment();
-        scene.environment = pmremGenerator.fromScene(environment).texture;
 
-        // Добавляем немного направленного света
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        new RGBELoader()
+            .setDataType(THREE.HalfFloatType)
+            .load('https://threejs.org/examples/textures/equirectangular/venice_sunset_1k.hdr', function (texture) {
+                const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+                scene.environment = envMap;
+                texture.dispose();
+                pmremGenerator.dispose();
+            });
+
+        // Добавляем основной свет (для теней)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
         scene.add(ambientLight);
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
-        directionalLight.position.set(5, 10, 7);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+        directionalLight.position.set(5, 10, 5);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
         scene.add(directionalLight);
+
+        // --- НЕВИДИМЫЙ ПОЛ ДЛЯ ТЕНИ ---
+        const planeGeometry = new THREE.PlaneGeometry(20, 20);
+        const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.15 });
+        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -Math.PI / 2;
+        plane.position.y = -2; // Опускаем пол вниз
+        plane.receiveShadow = true;
+        scene.add(plane);
 
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.autoRotate = false; 
+        controls.maxPolarAngle = Math.PI / 2 + 0.1; // Ограничиваем камеру, чтобы не смотреть снизу под пол
 
         const loader = new GLTFLoader();
         loader.load(
@@ -138,19 +164,24 @@
             function (gltf) {
                 const model = gltf.scene;
                 
-                // --- НАЛОЖЕНИЕ МЕТАЛЛИЧЕСКОГО МАТЕРИАЛА ---
+                // --- НАЛОЖЕНИЕ HD МАТЕРИАЛА ---
                 model.traverse((child) => {
                     if (child.isMesh) {
-                        // Удаляем старый материал и накладываем новый металлический
-                        child.material = new THREE.MeshStandardMaterial({
-                            color: 0xc0c0c0,      // Серебристо-серый цвет (как сталь/алюминий)
-                            metalness: 0.95,      // Почти 100% металл
-                            roughness: 0.25,      // Слегка шероховатая поверхность (не зеркало)
-                            envMapIntensity: 1.2  // Интенсивность отражения окружения
+                        // MeshPhysicalMaterial — топовый материал для реализма
+                        child.material = new THREE.MeshPhysicalMaterial({
+                            color: 0xd1d5db,      // Светло-серый (холодный) цвет стали
+                            metalness: 1.0,       // Максимальная металличность
+                            roughness: 0.15,      // Гладкая шлифовка (отражает свет)
+                            clearcoat: 0.5,       // Эффект защитного лака
+                            clearcoatRoughness: 0.1,
+                            envMapIntensity: 1.5  // Интенсивность отражений HDRI
                         });
+                        child.castShadow = true;
+                        child.receiveShadow = true;
                     }
                 });
 
+                // Центрируем и масштабируем
                 const box = new THREE.Box3().setFromObject(model);
                 const center = box.getCenter(new THREE.Vector3());
                 const size = box.getSize(new THREE.Vector3());
@@ -162,7 +193,8 @@
 
                 scene.add(model);
                 
-                camera.position.set(3, 3, 5);
+                // Ставим камеру красиво
+                camera.position.set(4, 4, 6);
                 controls.target.set(0, 0, 0);
                 controls.update();
             },
@@ -175,7 +207,6 @@
         window.addEventListener('resize', () => {
             const newWidth = viewerContainer.clientWidth;
             const newHeight = viewerContainer.clientHeight;
-            
             camera.aspect = newWidth / newHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(newWidth, newHeight);
