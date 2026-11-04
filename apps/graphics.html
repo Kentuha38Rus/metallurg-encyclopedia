@@ -108,64 +108,44 @@
         renderer.setSize(width, height);
         renderer.setPixelRatio(window.devicePixelRatio);
         
-        // Максимально качественный рендеринг
+        // Качественный рендеринг
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.2; 
+        renderer.toneMappingExposure = 1.0; 
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
         viewerContainer.appendChild(renderer.domElement);
 
-        // --- ЗАГРУЗКА СТУДИЙНОГО HDRI (ВЫСОКОЕ КАЧЕСТВО) ---
+        // --- ЗАГРУЗКА HDRI ОКРУЖЕНИЯ (Студийный свет) ---
         const pmremGenerator = new THREE.PMREMGenerator(renderer);
         pmremGenerator.compileEquirectangularShader();
 
         new RGBELoader()
             .setDataType(THREE.HalfFloatType)
-            .load('https://threejs.org/examples/textures/equirectangular/studio_small_03_1k.hdr', function (texture) {
+            .load('https://threejs.org/examples/textures/equirectangular/royal_esplanade_1k.hdr', function (texture) {
                 const envMap = pmremGenerator.fromEquirectangular(texture).texture;
                 scene.environment = envMap;
                 texture.dispose();
                 pmremGenerator.dispose();
             });
 
-        // --- ГЕНЕРАЦИЯ ПРОЦЕДУРНОГО ШУМА (Микроцарапины для реализма) ---
-        const canvas = document.createElement('canvas');
-        canvas.width = 512; 
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-        // Базовый серый цвет
-        ctx.fillStyle = '#888888'; 
-        ctx.fillRect(0, 0, 512, 512);
-        // Рисуем тысячи хаотичных штрихов (шлифовка металла)
-        for (let i = 0; i < 5000; i++) {
-            ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.15})`;
-            const x = Math.random() * 512;
-            const y = Math.random() * 512;
-            // Горизонтальные штрихи
-            ctx.fillRect(x, y, Math.random() * 15, 1); 
-        }
-        const noiseTexture = new THREE.CanvasTexture(canvas);
-        noiseTexture.wrapS = THREE.RepeatWrapping;
-        noiseTexture.wrapT = THREE.RepeatWrapping;
-
-        // Освещение и тени
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        // Дополнительный свет для контрастных бликов
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
         scene.add(ambientLight);
         
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
         directionalLight.position.set(5, 10, 5);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         scene.add(directionalLight);
 
-        const backLight = new THREE.DirectionalLight(0xaaccff, 1.5);
+        const backLight = new THREE.DirectionalLight(0xaaccff, 2);
         backLight.position.set(-5, 0, -5);
         scene.add(backLight);
 
-        // Невидимый пол для тени
+        // Невидимый пол для реалистичной тени
         const planeGeometry = new THREE.PlaneGeometry(20, 20);
-        const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.15 });
+        const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.2 });
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
         plane.rotation.x = -Math.PI / 2;
         plane.position.y = -2.5; 
@@ -176,7 +156,7 @@
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.autoRotate = false; 
-        // Свободное вращение 360 градусов!
+        // Вращение свободное (360 градусов)
 
         const loader = new GLTFLoader();
         loader.load(
@@ -186,47 +166,21 @@
                 
                 model.traverse((child) => {
                     if (child.isMesh) {
-                        // --- СОЗДАЕМ РЕАЛИСТИЧНЫЙ PBR-МАТЕРИАЛ ---
-                        const material = new THREE.MeshPhysicalMaterial({
-                            color: 0xcccccc,      // Светлый металл
-                            metalness: 1.0,       // Чистый металл
-                            roughness: 0.35,      // Базовое значение (будет перекрыто картой)
-                            roughnessMap: noiseTexture, // Наш процедурный шум
-                            clearcoat: 1.0,       // Эффект защитного лака/полировки
+                        // Надежный физический материал (полированная сталь)
+                        child.material = new THREE.MeshPhysicalMaterial({
+                            color: 0xd4d4d4,      // Стальной цвет
+                            metalness: 1.0,       // 100% металл
+                            roughness: 0.2,       // Гладкая шлифовка
+                            clearcoat: 1.0,       // Защитный лак (дает сильный блик)
                             clearcoatRoughness: 0.1,
-                            envMapIntensity: 1.5  // Яркость отражений
+                            envMapIntensity: 1.5  // Интенсивность отражений HDRI
                         });
-
-                        // --- ТРИПЛАНАРНОЕ ПРОЕЦИРОВАНИЕ (Наложение текстуры без UV) ---
-                        material.onBeforeCompile = (shader) => {
-                            shader.uniforms.uRoughnessMap = { value: noiseTexture };
-                            
-                            // Внедряем код в шейдер
-                            shader.fragmentShader = shader.fragmentShader.replace(
-                                '#include <roughnessmap_fragment>',
-                                `
-                                // Трипланарное наложение (по осям X, Y, Z)
-                                vec3 blend = pow(abs(vNormal), vec3(4.0));
-                                blend /= dot(blend, vec3(1.0));
-
-                                vec4 xTex = texture2D(uRoughnessMap, vViewPosition.yz * 0.5);
-                                vec4 yTex = texture2D(uRoughnessMap, vViewPosition.xz * 0.5);
-                                vec4 zTex = texture2D(uRoughnessMap, vViewPosition.xy * 0.5);
-                                
-                                vec4 texColor = xTex * blend.x + yTex * blend.y + zTex * blend.z;
-
-                                float roughnessFactor = roughness * texColor.r;
-                                `
-                            );
-                        };
-
-                        child.material = material;
                         child.castShadow = true;
                         child.receiveShadow = true;
                     }
                 });
 
-                // Центрирование и масштабирование
+                // Центрируем модель
                 const box = new THREE.Box3().setFromObject(model);
                 const center = box.getCenter(new THREE.Vector3());
                 const size = box.getSize(new THREE.Vector3());
