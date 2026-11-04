@@ -110,7 +110,7 @@
         
         // Качественный рендеринг
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.0; 
+        renderer.toneMappingExposure = 1.2; 
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
         viewerContainer.appendChild(renderer.domElement);
@@ -128,8 +128,8 @@
                 pmremGenerator.dispose();
             });
 
-        // Дополнительный свет для контрастных бликов
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+        // Дополнительный свет
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Чуть добавили базового света
         scene.add(ambientLight);
         
         const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
@@ -156,7 +156,6 @@
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.autoRotate = false; 
-        // Вращение свободное (360 градусов)
 
         const loader = new GLTFLoader();
         loader.load(
@@ -164,19 +163,16 @@
             function (gltf) {
                 const model = gltf.scene;
                 
+                // ВНИМАНИЕ: Мы больше НЕ перекрашиваем модель в серый цвет. 
+                // Мы просто включаем тени для нее.
                 model.traverse((child) => {
                     if (child.isMesh) {
-                        // Надежный физический материал (полированная сталь)
-                        child.material = new THREE.MeshPhysicalMaterial({
-                            color: 0xd4d4d4,      // Стальной цвет
-                            metalness: 1.0,       // 100% металл
-                            roughness: 0.2,       // Гладкая шлифовка
-                            clearcoat: 1.0,       // Защитный лак (дает сильный блик)
-                            clearcoatRoughness: 0.1,
-                            envMapIntensity: 1.5  // Интенсивность отражений HDRI
-                        });
                         child.castShadow = true;
                         child.receiveShadow = true;
+                        
+                        // Если текстура покажется слишком темной на сайте, 
+                        // можно раскомментировать строку ниже, чтобы добавить ей яркости:
+                        // if (child.material) child.material.envMapIntensity = 1.5;
                     }
                 });
 
@@ -199,6 +195,7 @@
             undefined,
             function (error) {
                 console.error('Ошибка загрузки модели:', error);
+                alert('Не удалось загрузить 3D модель. Возможно, файл model.glb не на месте.');
             }
         );
 
