@@ -10,7 +10,7 @@
         html, body { 
             width: 100%; 
             height: 100%; 
-            background-color: #1e3c72; 
+            background-color: #0f172a; /* Темный фон для контраста */
             font-family: -apple-system, sans-serif;
             overflow: hidden; 
         }
@@ -24,8 +24,6 @@
         .viewer-panel {
             flex: 1.5; 
             position: relative;
-            /* Делаем фон темнее, чтобы HDRI-отражения выглядели контрастнее */
-            background: #0f172a; 
         }
 
         .image-panel {
@@ -34,7 +32,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            background: rgba(0, 0, 0, 0.2); 
+            background: rgba(0, 0, 0, 0.4); 
             border-left: 1px solid rgba(255, 255, 255, 0.1);
             overflow: hidden; 
         }
@@ -44,7 +42,7 @@
             max-height: 100%;
             object-fit: contain; 
             border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
             border: 4px solid rgba(255, 255, 255, 0.8); 
             background: #fff;
         }
@@ -95,7 +93,6 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        // Загрузчик HDRI карт
         import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
         const viewerContainer = document.getElementById('viewer-panel');
@@ -103,6 +100,7 @@
         const height = viewerContainer.clientHeight;
 
         const scene = new THREE.Scene();
+        // Оставляем фон прозрачным, чтобы был виден CSS-фон
         scene.background = null; 
 
         const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
@@ -111,44 +109,50 @@
         renderer.setSize(width, height);
         renderer.setPixelRatio(window.devicePixelRatio);
         
-        // Включаем фотореалистичный рендеринг и тени
+        // Включаем максимально качественный рендеринг света
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.2; 
+        renderer.toneMappingExposure = 1.5; // Делаем свет ярче и сочнее
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Мягкие тени
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
         viewerContainer.appendChild(renderer.domElement);
 
-        // --- ЗАГРУЗКА HDRI ОКРУЖЕНИЯ ---
-        // Загружаем реалистичную карту студии (отражения)
+        // --- ЗАГРУЗКА СТУДИЙНОГО HDRI (ВЫСОКОЕ КАЧЕСТВО) ---
         const pmremGenerator = new THREE.PMREMGenerator(renderer);
         pmremGenerator.compileEquirectangularShader();
 
+        // Используем студийную карту с контрастным светом (как в профессиональной фотостудии)
         new RGBELoader()
             .setDataType(THREE.HalfFloatType)
-            .load('https://threejs.org/examples/textures/equirectangular/venice_sunset_1k.hdr', function (texture) {
+            .load('https://threejs.org/examples/textures/equirectangular/royal_esplanade_1k.hdr', function (texture) {
                 const envMap = pmremGenerator.fromEquirectangular(texture).texture;
                 scene.environment = envMap;
                 texture.dispose();
                 pmremGenerator.dispose();
             });
 
-        // Добавляем основной свет (для теней)
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        // Базовое освещение
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
         scene.add(ambientLight);
         
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+        // Основной свет (создает тени)
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
         directionalLight.position.set(5, 10, 5);
         directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 1024;
-        directionalLight.shadow.mapSize.height = 1024;
+        directionalLight.shadow.mapSize.width = 2048; // Высокое разрешение теней
+        directionalLight.shadow.mapSize.height = 2048;
         scene.add(directionalLight);
 
-        // --- НЕВИДИМЫЙ ПОЛ ДЛЯ ТЕНИ ---
+        // Контровой свет (подсвечивает края детали, делает её объемной)
+        const backLight = new THREE.DirectionalLight(0xaaccff, 2);
+        backLight.position.set(-5, 0, -5);
+        scene.add(backLight);
+
+        // Невидимый пол для тени
         const planeGeometry = new THREE.PlaneGeometry(20, 20);
-        const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.15 });
+        const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.2 });
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
         plane.rotation.x = -Math.PI / 2;
-        plane.position.y = -2; // Опускаем пол вниз
+        plane.position.y = -2.5; 
         plane.receiveShadow = true;
         scene.add(plane);
 
@@ -156,7 +160,8 @@
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.autoRotate = false; 
-        controls.maxPolarAngle = Math.PI / 2 + 0.1; // Ограничиваем камеру, чтобы не смотреть снизу под пол
+        
+        // ВРАЩЕНИЕ ИСПРАВЛЕНО: Убраны ограничения, теперь можно крутить 360 градусов!
 
         const loader = new GLTFLoader();
         loader.load(
@@ -164,36 +169,33 @@
             function (gltf) {
                 const model = gltf.scene;
                 
-                // --- НАЛОЖЕНИЕ HD МАТЕРИАЛА ---
+                // --- МАТЕРИАЛ ВЫСОКОГО КАЧЕСТВА ---
                 model.traverse((child) => {
                     if (child.isMesh) {
-                        // MeshPhysicalMaterial — топовый материал для реализма
                         child.material = new THREE.MeshPhysicalMaterial({
-                            color: 0xd1d5db,      // Светло-серый (холодный) цвет стали
-                            metalness: 1.0,       // Максимальная металличность
-                            roughness: 0.15,      // Гладкая шлифовка (отражает свет)
-                            clearcoat: 0.5,       // Эффект защитного лака
+                            color: 0xaaaaaa,      // Стальной цвет
+                            metalness: 1.0,       // Чистый металл
+                            roughness: 0.1,       // Очень гладкий (полировка)
+                            clearcoat: 1.0,       // Слой защитного лака (дает мощный блик)
                             clearcoatRoughness: 0.1,
-                            envMapIntensity: 1.5  // Интенсивность отражений HDRI
+                            envMapIntensity: 2.0  // Усиливаем отражения HDRI-карты
                         });
                         child.castShadow = true;
                         child.receiveShadow = true;
                     }
                 });
 
-                // Центрируем и масштабируем
                 const box = new THREE.Box3().setFromObject(model);
                 const center = box.getCenter(new THREE.Vector3());
                 const size = box.getSize(new THREE.Vector3());
 
                 const maxDim = Math.max(size.x, size.y, size.z);
-                const scale = 5 / maxDim; 
+                const scale = 4.5 / maxDim; 
                 model.scale.set(scale, scale, scale);
                 model.position.sub(center.multiplyScalar(scale));
 
                 scene.add(model);
                 
-                // Ставим камеру красиво
                 camera.position.set(4, 4, 6);
                 controls.target.set(0, 0, 0);
                 controls.update();
